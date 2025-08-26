@@ -56,7 +56,8 @@ jobs:
           CLANG_TRIPLE=aarch64-linux-gnu- \
           CROSS_COMPILE=~/proton-clang/bin/aarch64-linux-gnu- \
           HOSTCC=gcc \
-          HOSTCXX=g++
+          HOSTCXX=g++ \
+          Image.gz dtbs
 
     - name: Create Image.gz-dtb
       run: |
