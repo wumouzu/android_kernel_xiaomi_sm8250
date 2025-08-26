@@ -34,6 +34,7 @@ jobs:
         echo "CROSS_COMPILE=aarch64-linux-gnu-" >> $GITHUB_ENV
     - name: build config
       run: |
+        echo "PATH=~/proton-clang/bin:$PATH" >> $GITHUB_ENV
         make vendor/kona_defconfig vendor/xiaomi/umi.config
     - name: lxc
       run: |
@@ -43,10 +44,12 @@ jobs:
         ./scripts/kconfig/merge_config.sh .config docker.config
     - name: ksunext
       run: |
+        echo "PATH=~/proton-clang/bin:$PATH" >> $GITHUB_ENV
         curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -
         
     - name: Build kernel
       run: |
+        echo "PATH=~/proton-clang/bin:$PATH" >> $GITHUB_ENV
         make -j$(nproc)
         
     - name: Upload compiled kernel
