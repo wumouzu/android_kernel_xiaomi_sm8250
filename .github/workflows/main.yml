@@ -49,9 +49,13 @@ jobs:
 
     - name: Build kernel
       run: |
-        export PATH=$HOME/proton-clang/bin:$PATH
-        make -j$(nproc) ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu-
-
+        make -j$(nproc) \
+        ARCH=arm64 \
+        CC=$HOME/proton-clang/bin/clang \
+        CROSS_COMPILE=$HOME/proton-clang/bin/aarch64-linux-gnu- \
+        CLANG_TRIPLE=aarch64-linux-gnu- \
+        HOSTCC=gcc \
+        HOSTCXX=g++
     - name: Upload kernel artifacts
       uses: actions/upload-artifact@v4
       with:
