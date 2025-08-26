@@ -19,39 +19,43 @@ jobs:
     - name: Setup build environment
       run: |
         sudo apt-get update
-        sudo apt-get install git flex bison ccache libncurses5-dev build-essential
-        
-    - name: Clone toolchain and set path
+        sudo apt-get install -y git flex bison ccache libncurses5-dev bc \
+          libssl-dev gcc g++ make wget unzip
+
+    - name: Clone Proton Clang
       run: |
         git clone https://github.com/kdrag0n/proton-clang.git --depth=1 ~/proton-clang
-        echo "PATH=~/proton-clang/bin:$PATH" >> $GITHUB_ENV
-        
-    - name: Configure and build kernel
+        echo "PATH=$HOME/proton-clang/bin:$PATH" >> $GITHUB_ENV
+
+    - name: Setup kernel variables
       run: |
-        # 设置交叉编译变量
-        export ARCH=arm64
-        export SUBARCH=arm64
-        export CROSS_COMPILE=aarch64-linux-gnu-
-        export CC=clang
-        export CLANG_TRIPLE=aarch64-linux-gnu-
-        
-        # 设置主机编译变量
-        export HOSTCC=gcc
-        export HOSTLD=ld
-        
-        # 加载基础配置并合并
-        make vendor/kona_defconfig
-        ./scripts/kconfig/merge_config.sh .config arch/arm64/configs/vendor/xiaomi/umi.config
-        ./scripts/kconfig/merge_config.sh .config docker.config
-        ./scripts/kconfig/merge_config.sh .config lxc.config
-        # 应用 KernelSU 补丁
-        # 你的仓库需要有 kernelsu 子模块: git submodule add https://github.com/KernelSU/KernelSU.git kernelsu
+        echo "ARCH=arm64" >> $GITHUB_ENV
+        echo "SUBARCH=arm64" >> $GITHUB_ENV
+        echo "CC=clang" >> $GITHUB_ENV
+        echo "CLANG_TRIPLE=aarch64-linux-gnu-" >> $GITHUB_ENV
+
+    - name: Build defconfig
+      run: |
+        make vendor/kona_defconfig vendor/xiaomi/umi.config
+
+    - name: Merge extra configs
+      run: |
+        chmod +x ./scripts/kconfig/merge_config.sh
+        ./scripts/kconfig/merge_config.sh .config lxc.config docker.config
+
+    - name: Add KernelSU
+      run: |
         curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -
-        # 并行编译
-        make -j$(nproc)
-        
-    - name: Upload compiled kernel
+
+    - name: Build kernel
+      run: |
+        export PATH=$HOME/proton-clang/bin:$PATH
+        make -j$(nproc) ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu-
+
+    - name: Upload kernel artifacts
       uses: actions/upload-artifact@v4
       with:
         name: umi-kernel-artifacts
-        path: arch/arm64/boot/Image.gz-dtb
+        path: |
+          arch/arm64/boot/Image*
+          arch/arm64/boot/dts/*.dtb
