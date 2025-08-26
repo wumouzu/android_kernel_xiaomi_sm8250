@@ -46,7 +46,9 @@ jobs:
         
     - name: Build kernel
       run: |
-        
+        export PATH=~/proton-clang/bin:$PATH
+        export CC=clang
+        export CLANG_TRIPLE=aarch64-linux-gnu-
         make -j$(nproc)
         
     - name: Upload compiled kernel
