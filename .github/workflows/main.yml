@@ -58,10 +58,10 @@ jobs:
           HOSTCC=gcc \
           HOSTCXX=g++
     - name: Compress kernel
-      run: gzip -c arch/arm64/boot/Image > arch/arm64/boot/Image.gz-dtb
+      run: gzip -c out/arch/arm64/boot/Image > arch/arm64/boot/Image.gz-dtb
 
     - name: Upload compiled kernel
       uses: actions/upload-artifact@v4
       with:
         name: umi-kernel-artifacts
-        path: arch/arm64/boot/Image.gz-dtb
+        path: out/arch/arm64/boot/Image.gz-dtb
