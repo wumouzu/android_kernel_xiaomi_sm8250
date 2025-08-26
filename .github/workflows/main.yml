@@ -34,6 +34,9 @@ jobs:
         
     - name: Build kernel
       run: |
+        make vendor/kona_defconfig vendor/xiaomi/umi.config
+        ./scripts/kconfig/merge_config.sh .config lxc.config
+        ./scripts/kconfig/merge_config.sh .config docker.config
         curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -
         make -j$(nproc)
         
