@@ -19,7 +19,7 @@ jobs:
     - name: Setup build environment
       run: |
         sudo apt-get update
-        sudo apt-get install -y git flex bison ccache gcc g++ make libncurses5-dev curl
+        sudo apt-get install -y git flex bison ccache gcc g++ make libncurses5-dev curl unzip
 
     - name: Clone Proton Clang toolchain
       run: |
@@ -57,11 +57,22 @@ jobs:
           CROSS_COMPILE=~/proton-clang/bin/aarch64-linux-gnu- \
           HOSTCC=gcc \
           HOSTCXX=g++
-    - name: Compress kernel
-      run: gzip -c out/arch/arm64/boot/Image > arch/arm64/boot/Image.gz-dtb
+
+    - name: Create Image.gz-dtb
+      run: |
+        cat out/arch/arm64/boot/Image out/arch/arm64/boot/dts/vendor/qcom/*.dtb > out/Image.gz-dtb
+        gzip -f out/Image.gz-dtb
+
+    - name: Build dtbo.img
+      run: |
+        mkdir -p out/dtbo_tmp
+        cp out/arch/arm64/boot/dts/vendor/qcom/*.dtbo out/dtbo_tmp/
+        dtboimg create --output out/dtbo.img out/dtbo_tmp/*.dtbo
 
     - name: Upload compiled kernel
       uses: actions/upload-artifact@v4
       with:
         name: umi-kernel-artifacts
-        path: out/arch/arm64/boot/Image.gz-dtb
+        path: |
+          out/Image.gz-dtb
+          out/dtbo.img
