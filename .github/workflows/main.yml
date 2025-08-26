@@ -19,47 +19,42 @@ jobs:
     - name: Setup build environment
       run: |
         sudo apt-get update
-        sudo apt-get install -y git flex bison ccache libncurses5-dev bc \
-          libssl-dev gcc g++ make wget unzip
-
-    - name: Clone Proton Clang
+        sudo apt-get install git flex bison ccache libncurses5-dev make
+        
+    - name: Clone toolchain (Proton Clang)
       run: |
         git clone https://github.com/kdrag0n/proton-clang.git --depth=1 ~/proton-clang
-        echo "PATH=$HOME/proton-clang/bin:$PATH" >> $GITHUB_ENV
-
+        echo "PATH=~/proton-clang/bin:$PATH" >> $GITHUB_ENV
+        
     - name: Setup kernel variables
       run: |
         echo "ARCH=arm64" >> $GITHUB_ENV
+        echo "PATH=~/proton-clang/bin:$PATH" >> $GITHUB_ENV
         echo "SUBARCH=arm64" >> $GITHUB_ENV
-        echo "CC=clang" >> $GITHUB_ENV
-        echo "CLANG_TRIPLE=aarch64-linux-gnu-" >> $GITHUB_ENV
-
-    - name: Build defconfig
+    - name: build config
       run: |
         make vendor/kona_defconfig vendor/xiaomi/umi.config
-
-    - name: Merge extra configs
+    - name: lxc
       run: |
-        chmod +x ./scripts/kconfig/merge_config.sh
-        ./scripts/kconfig/merge_config.sh .config lxc.config docker.config
-
-    - name: Add KernelSU
+        ./scripts/kconfig/merge_config.sh .config lxc.config
+    - name: docker
+      run: |
+        ./scripts/kconfig/merge_config.sh .config docker.config
+    - name: ksunext
       run: |
         curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -
-
+        
     - name: Build kernel
       run: |
-        make -j$(nproc) \
-        ARCH=arm64 \
-        CC=$HOME/proton-clang/bin/clang \
-        CROSS_COMPILE=$HOME/proton-clang/bin/aarch64-linux-gnu- \
-        CLANG_TRIPLE=aarch64-linux-gnu- \
-        HOSTCC=gcc \
-        HOSTCXX=g++
-    - name: Upload kernel artifacts
+        export PATH=~/proton-clang/bin:$PATH
+        export CC=clang
+        export CLANG_TRIPLE=aarch64-linux-gnu-
+        export HOSTLD=ld
+        export HOSTCC=gcc
+        make -j$(nproc)
+        
+    - name: Upload compiled kernel
       uses: actions/upload-artifact@v4
       with:
         name: umi-kernel-artifacts
-        path: |
-          arch/arm64/boot/Image*
-          arch/arm64/boot/dts/*.dtb
+        path: arch/arm64/boot/Image.gz-dtb
