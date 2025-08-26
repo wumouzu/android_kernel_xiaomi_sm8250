@@ -51,6 +51,7 @@ jobs:
         make -j$(nproc) \
           O=out \
           ARCH=arm64 \
+          olddefconfig \
           CC=~/proton-clang/bin/clang \
           CLANG_TRIPLE=aarch64-linux-gnu- \
           CROSS_COMPILE=~/proton-clang/bin/aarch64-linux-gnu- \
