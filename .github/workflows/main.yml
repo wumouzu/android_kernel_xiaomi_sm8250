@@ -57,6 +57,8 @@ jobs:
           CROSS_COMPILE=~/proton-clang/bin/aarch64-linux-gnu- \
           HOSTCC=gcc \
           HOSTCXX=g++
+    - name: Compress kernel
+      run: gzip -c arch/arm64/boot/Image > arch/arm64/boot/Image.gz-dtb
 
     - name: Upload compiled kernel
       uses: actions/upload-artifact@v4
