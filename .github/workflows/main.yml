@@ -50,6 +50,8 @@ jobs:
          make mrproper
     - name: Build kernel
       run: |
+        ./scripts/config --file out/.config --disable CONFIG_TOUCHSCREEN_FTS_521
+        ./scripts/config --file out/.config --enable CONFIG_TOUCHSCREEN_ST_FTS
         make -j$(nproc) \
           O=out \
           ARCH=arm64 \
