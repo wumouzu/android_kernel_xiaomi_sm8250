@@ -24,20 +24,29 @@ jobs:
     - name: Clone toolchain (Proton Clang)
       run: |
         git clone https://github.com/kdrag0n/proton-clang.git --depth=1 ~/proton-clang
-        echo "PATH=~/proton-clang/bin:$PATH" >> $GITHUB_ENV
+        
         
     - name: Setup kernel variables
       run: |
         echo "ARCH=arm64" >> $GITHUB_ENV
+        echo "PATH=~/proton-clang/bin:$PATH" >> $GITHUB_ENV
         echo "SUBARCH=arm64" >> $GITHUB_ENV
         echo "CROSS_COMPILE=aarch64-linux-gnu-" >> $GITHUB_ENV
+    - name: build config
+      run: |
+        make vendor/kona_defconfig vendor/xiaomi/umi.config
+    - name: lxc
+      run: |
+        ./scripts/kconfig/merge_config.sh .config lxc.config
+    - name: docker
+      run: |
+        ./scripts/kconfig/merge_config.sh .config docker.config
+    - name: ksunext
+      run: |
+        curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -
         
     - name: Build kernel
       run: |
-        make vendor/kona_defconfig vendor/xiaomi/umi.config
-        ./scripts/kconfig/merge_config.sh .config lxc.config
-        ./scripts/kconfig/merge_config.sh .config docker.config
-        curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -
         make -j$(nproc)
         
     - name: Upload compiled kernel
