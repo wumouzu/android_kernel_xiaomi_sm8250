@@ -47,7 +47,7 @@ jobs:
         curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -
     - name: Clean kernel source
       run: |
-         make mrproper
+         
     - name: Disable duplicate FTS driver
       run: |
          make O=out ARCH=arm64 olddefconfig
