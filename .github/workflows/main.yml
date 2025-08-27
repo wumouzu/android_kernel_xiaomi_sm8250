@@ -29,61 +29,38 @@ jobs:
       run: |
         echo "ARCH=arm64" >> $GITHUB_ENV
         echo "SUBARCH=arm64" >> $GITHUB_ENV
-    - name: Clean kernel source
-      run: |
-        make mrproper
-
-    - name: Build defconfig
-      run: |
-        make O=out ARCH=arm64 vendor/kona_defconfig vendor/xiaomi/umi.config
-
-    - name: Merge LXC config
-      run: |
-        ./scripts/kconfig/merge_config.sh out/.config lxc.config
-
-    - name: Merge Docker config
-      run: |
-        ./scripts/kconfig/merge_config.sh out/.config docker.config
 
     - name: Apply KernelSU Next
       run: |
         curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -
-         
-    - name: Disable duplicate FTS driver
-      run: |
-        make O=out ARCH=arm64 olddefconfig
-         ./scripts/config --file out/.config --disable CONFIG_TOUCHSCREEN_FTS_521
-         ./scripts/config --file out/.config --enable CONFIG_TOUCHSCREEN_ST_FTS
-        make O=out ARCH=arm64 olddefconfig
 
     - name: Build kernel
       run: |
         make -j$(nproc) \
-          O=out \
           ARCH=arm64 \
           olddefconfig \
           CC=~/proton-clang/bin/clang \
           CLANG_TRIPLE=aarch64-linux-gnu- \
           CROSS_COMPILE=~/proton-clang/bin/aarch64-linux-gnu- \
           HOSTCC=gcc \
-          HOSTCXX=g++ \
-          Image.gz dtbs
+          HOSTCXX=g++
 
     - name: Create Image.gz-dtb
       run: |
-        cat out/arch/arm64/boot/Image out/arch/arm64/boot/dts/vendor/qcom/*.dtb > out/Image.gz-dtb
-        gzip -f out/Image.gz-dtb
+        cat arch/arm64/boot/Image arch/arm64/boot/dts/vendor/qcom/*.dtb > Image.gz-dtb
+        gzip -f Image.gz-dtb
 
     - name: Build dtbo.img
       run: |
-        mkdir -p out/dtbo_tmp
-        cp out/arch/arm64/boot/dts/vendor/qcom/*.dtbo out/dtbo_tmp/
-        dtboimg create --output out/dtbo.img out/dtbo_tmp/*.dtbo
+        mkdir -p dtbo_tmp
+        cp arch/arm64/boot/dts/vendor/qcom/*.dtbo dtbo_tmp/
+        dtboimg create --output dtbo.img dtbo_tmp/*.dtbo
 
     - name: Upload compiled kernel
       uses: actions/upload-artifact@v4
       with:
         name: umi-kernel-artifacts
         path: |
-          out/Image.gz-dtb
-          out/dtbo.img
+          Image.gz-dtb
+          dtbo.img
+          .config
