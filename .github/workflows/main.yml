@@ -29,6 +29,9 @@ jobs:
       run: |
         echo "ARCH=arm64" >> $GITHUB_ENV
         echo "SUBARCH=arm64" >> $GITHUB_ENV
+    - name: Clean kernel source
+      run: |
+        make mrproper
 
     - name: Build defconfig
       run: |
@@ -45,9 +48,6 @@ jobs:
     - name: Apply KernelSU Next
       run: |
         curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -
-    - name: Clean kernel source
-      run: |
-        make mrproper
          
     - name: Disable duplicate FTS driver
       run: |
